@@ -79,9 +79,6 @@ public class ShipTransformer : MonoBehaviour
         if (inputStatus.Paused)
             return;
 
-        RotateShip();
-        shipStatus.blockRotation = transform.rotation;
-
         if (shipStatus.Stationary)
             return;
 
