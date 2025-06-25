@@ -11,17 +11,27 @@ namespace CosmicShore.Core
         public class Pool
         {
             public GameObject prefab;
+            public string tag;
             public int size;
-            public Pool(GameObject prefab, int size)
+
+            public Pool(GameObject prefab, int size, string tag = null)
             {
                 this.prefab = prefab;
                 this.size = size;
+                this.tag = string.IsNullOrEmpty(tag) ? prefab.tag : tag;
             }
         }
 
         [FormerlySerializedAs("pools")]
         [SerializeField] protected List<Pool> _configDatas;
         protected Dictionary<string, Queue<GameObject>> _poolDictionary;
+
+        /// <summary>
+        /// When a pool is empty and a spawn is requested we create this many
+        /// objects so that the pool always has at least one available item
+        /// after the spawn completes.
+        /// </summary>
+        protected const int _objectsCreatedWhenEmpty = 2;
 
         #region Initialization
 
@@ -43,7 +53,7 @@ namespace CosmicShore.Core
 
             foreach (var config in _configDatas)
             {
-                CreateNewPool(config.prefab, config.size);
+                CreateNewPool(config.prefab, config.size, config.tag);
             }
         }
 
@@ -53,37 +63,40 @@ namespace CosmicShore.Core
 
         #region Pool Creation & Expansion
 
-        public virtual void AddConfigData(GameObject prefab, int size)
+        public virtual void AddConfigData(GameObject prefab, int size, string tag = null)
         {
             _configDatas ??= new List<Pool>();
             _poolDictionary ??= new Dictionary<string, Queue<GameObject>>();
 
-            _configDatas.Add(new Pool(prefab, size));
-            CreateNewPool(prefab, size);
+            _configDatas.Add(new Pool(prefab, size, tag));
+            CreateNewPool(prefab, size, tag);
         }
 
-        protected virtual void CreateNewPool(GameObject prefab, int size)
+        protected virtual void CreateNewPool(GameObject prefab, int size, string tag = null)
         {
-            if (_poolDictionary.ContainsKey(prefab.tag))
+            string poolTag = tag ?? prefab.tag;
+
+            if (_poolDictionary.ContainsKey(poolTag))
             {
-                Debug.LogWarning($"Pool with tag '{prefab.tag}' already exists.");
+                Debug.LogWarning($"Pool with tag '{poolTag}' already exists.");
                 return;
             }
 
             Queue<GameObject> objectPool = new Queue<GameObject>();
-            _poolDictionary.Add(prefab.tag, objectPool);
+            _poolDictionary.Add(poolTag, objectPool);
 
             for (int i = 0; i < size; i++)
             {
-                CreatePoolObject(prefab);
+                CreatePoolObject(prefab, poolTag);
             }
         }
 
-        protected virtual GameObject CreatePoolObject(GameObject prefab)
+        protected virtual GameObject CreatePoolObject(GameObject prefab, string tag)
         {
             GameObject obj = Instantiate(prefab, transform);
+            obj.tag = tag;
             obj.SetActive(false);
-            _poolDictionary[prefab.tag].Enqueue(obj);
+            _poolDictionary[tag].Enqueue(obj);
             return obj;
         }
 
@@ -99,7 +112,7 @@ namespace CosmicShore.Core
 
                 if (TryGetPrefabByTag(tag, out GameObject prefab))
                 {
-                    CreateNewPool(prefab, GetPoolSize(tag)); // Default size = 0
+                    CreateNewPool(prefab, 0, tag);
                 }
                 else
                 {
@@ -110,10 +123,13 @@ namespace CosmicShore.Core
 
             if (_poolDictionary[tag].Count == 0)
             {
-                DebugExtensions.LogColored($"Pool '{tag}' is empty. Instantiating new object...", Color.red);
                 if (TryGetPrefabByTag(tag, out GameObject prefab))
                 {
-                    CreatePoolObject(prefab);
+                    DebugExtensions.LogColored($"Pool '{tag}' is empty. Expanding...", Color.red);
+                    for (int i = 0; i < _objectsCreatedWhenEmpty; i++)
+                    {
+                        CreatePoolObject(prefab, tag);
+                    }
                 }
             }
 
@@ -144,7 +160,7 @@ namespace CosmicShore.Core
         {
             foreach (var config in _configDatas)
             {
-                if (config.prefab != null && config.prefab.tag == tag)
+                if (config.prefab != null && config.tag == tag)
                 {
                     prefab = config.prefab;
                     return true;

@@ -40,15 +40,15 @@ namespace CosmicShore.Game
             };
         }
 
-        protected override GameObject CreatePoolObject(GameObject prefab)
+        protected override GameObject CreatePoolObject(GameObject prefab, string tag)
         {
-            GameObject obj = base.CreatePoolObject(prefab);
+            GameObject obj = base.CreatePoolObject(prefab, tag);
 
             // Set the material based on the pool's tag
             var renderer = obj.GetComponent<Renderer>();
             if (renderer != null)
             {
-                Teams team = GetTeamFromTag(prefab.tag);
+                Teams team = GetTeamFromTag(tag);
                 Material teamMaterial = new Material(_themeManagerData.GetTeamExplodingBlockMaterial(team));
                 renderer.material = teamMaterial;
             }
@@ -75,16 +75,16 @@ namespace CosmicShore.Game
 
             // Create team specific pools
             fossilBlockPrefab.tag = GetTagForTeam(Teams.Jade);
-            AddConfigData(fossilBlockPrefab, poolSizePerTeam);
+            AddConfigData(fossilBlockPrefab, poolSizePerTeam, fossilBlockPrefab.tag);
 
             fossilBlockPrefab.tag = GetTagForTeam(Teams.Ruby);
-            AddConfigData(fossilBlockPrefab, poolSizePerTeam);
+            AddConfigData(fossilBlockPrefab, poolSizePerTeam, fossilBlockPrefab.tag);
 
             fossilBlockPrefab.tag = GetTagForTeam(Teams.Gold);
-            AddConfigData(fossilBlockPrefab, poolSizePerTeam);
+            AddConfigData(fossilBlockPrefab, poolSizePerTeam, fossilBlockPrefab.tag);
 
             fossilBlockPrefab.tag = GetTagForTeam(Teams.Blue);
-            AddConfigData(fossilBlockPrefab, poolSizePerTeam);
+            AddConfigData(fossilBlockPrefab, poolSizePerTeam, fossilBlockPrefab.tag);
 
             // Restore original tag
             fossilBlockPrefab.tag = originalTag;
