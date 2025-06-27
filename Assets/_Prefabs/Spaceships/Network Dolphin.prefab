@@ -71,8 +71,8 @@ PrefabInstance:
     - target: {fileID: 6539064704080185374, guid: 3cc1c31e8138b6448ae4264dd90d24ac,
         type: 3}
       propertyPath: _shipObject
-      value: 
-      objectReference: {fileID: 0}
+      value:
+      objectReference: {fileID: 4863223154206343612}
     m_RemovedComponents:
     - {fileID: 874579555101021527, guid: 3cc1c31e8138b6448ae4264dd90d24ac, type: 3}
     m_RemovedGameObjects: []
