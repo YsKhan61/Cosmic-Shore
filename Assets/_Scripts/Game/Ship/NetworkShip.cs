@@ -233,8 +233,7 @@ namespace CosmicShore.Game
 
         public void PerformShipControllerActions(InputEvents @event)
         {
-            ShipHelper.PerformShipControllerActions(@event, out float time, _shipControlActions);
-            _inputAbilityStartTimes[@event] = time;
+            ShipHelper.PerformShipControllerActions(@event, _inputAbilityStartTimes, _shipControlActions);
         }
 
         public void StopShipControllerActions(InputEvents @event)
@@ -444,9 +443,6 @@ namespace CosmicShore.Game
             ShipStatus.blockRotation = newValue;
         }
 
-        //
-        // Attach and Detach
-        //
         void Attach(TrailBlock trailBlock)
         {
             if (trailBlock.Trail != null)

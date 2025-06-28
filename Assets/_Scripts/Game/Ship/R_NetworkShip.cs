@@ -16,15 +16,9 @@ namespace CosmicShore.Game
     [RequireComponent(typeof(ShipStatus))]
     public class R_NetworkShip : R_ShipBase
     {
-        #region Public Properties
-
-        #endregion
-
-        NetworkVariable<float> n_Speed = new(writePerm: NetworkVariableWritePermission.Owner);
-        NetworkVariable<Vector3> n_Course = new(writePerm: NetworkVariableWritePermission.Owner);
-        NetworkVariable<Quaternion> n_BlockRotation = new(writePerm: NetworkVariableWritePermission.Owner);
-
-        float speedModifierDuration = 2f;
+        readonly NetworkVariable<float> n_Speed = new(writePerm: NetworkVariableWritePermission.Owner);
+        readonly NetworkVariable<Vector3> n_Course = new(writePerm: NetworkVariableWritePermission.Owner);
+        readonly NetworkVariable<Quaternion> n_BlockRotation = new(writePerm: NetworkVariableWritePermission.Owner);
 
         public override void OnNetworkSpawn()
         {
@@ -36,7 +30,7 @@ namespace CosmicShore.Game
             }
             else
             {
-                shipInput?.SubscribeEvents();
+                actionHandler.SubscribeEvents();
             }
         }
 
@@ -60,20 +54,20 @@ namespace CosmicShore.Game
             }
             else
             {
-                shipInput?.UnsubscribeEvents();
+                actionHandler.UnsubscribeEvents();
             }
         }
 
-        public void Initialize(IPlayer player)
+        public override void Initialize(IPlayer player)
         {
             ShipStatus.Player = player;
 
             SetPlayerToShipStatusAndSkimmers(player);
             SetTeamToShipStatusAndSkimmers(player.Team);
 
-            actionHandler?.Initialize(this);
-            impactHandler?.Initialize(this);
-            customization?.Initialize(this);
+            actionHandler.Initialize(this);
+            impactHandler.Initialize(this);
+            customization.Initialize(this);
 
             InitializeShipGeometries();
 
@@ -95,7 +89,7 @@ namespace CosmicShore.Game
                 onBottomEdgeButtonsEnabled.RaiseEvent(true);
                 // if (_bottomEdgeButtons) ShipStatus.Player.GameCanvas.MiniGameHUD.PositionButtonPanel(true);
 
-                shipInput?.Initialize(this);
+                actionHandler.Initialize(this);
 
                 ShipStatus.AIPilot.Initialize(false);
                 ShipStatus.ShipCameraCustomizer.Initialize(this);
@@ -106,14 +100,8 @@ namespace CosmicShore.Game
             ShipStatus.TrailSpawner.ForceStartSpawningTrail();
             ShipStatus.TrailSpawner.RestartTrailSpawnerAfterDelay(2f);
 
-            OnShipInitialized?.Invoke(ShipStatus);
+            InvokeShipInitializedEvent();
         }
-
-        public void PerformShipControllerActions(InputEvents @event) => shipInput?.PerformShipControllerActions(@event);
-
-        public void StopShipControllerActions(InputEvents @event) => shipInput?.StopShipControllerActions(@event);
-
-
 
         void OnSpeedChanged(float previousValue, float newValue)
         {
@@ -128,18 +116,6 @@ namespace CosmicShore.Game
         void OnBlockRotationChanged(Quaternion previousValue, Quaternion newValue)
         {
             ShipStatus.blockRotation = newValue;
-        }
-
-        //
-        // Attach and Detach
-        //
-        void Attach(TrailBlock trailBlock)
-        {
-            if (trailBlock.Trail != null)
-            {
-                ShipStatus.Attached = true;
-                ShipStatus.AttachedTrailBlock = trailBlock;
-            }
         }
     }
 

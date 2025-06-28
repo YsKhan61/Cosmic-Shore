@@ -1,6 +1,5 @@
 using CosmicShore.Game;
-using CosmicShore.Game.IO;
-using CosmicShore.Models.Enums;
+using CosmicShore.Utilities;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,10 +14,39 @@ namespace CosmicShore.Core
         [SerializeField] List<InputEventShipActionMapping> _inputEventShipActions;
         [SerializeField] List<ResourceEventShipActionMapping> _resourceEventClassActions;
 
+        [SerializeField] InputEventsEventChannelSO OnButton1Pressed;
+        [SerializeField] InputEventsEventChannelSO OnButton1Released;
+        [SerializeField] InputEventsEventChannelSO OnButton2Pressed;
+        [SerializeField] InputEventsEventChannelSO OnButton2Released;
+        [SerializeField] InputEventsEventChannelSO OnButton3Pressed;
+        [SerializeField] InputEventsEventChannelSO OnButton3Released;
+        
         readonly Dictionary<InputEvents, List<ShipAction>> _shipControlActions = new();
         readonly Dictionary<ResourceEvents, List<ShipAction>> _classResourceActions = new();
+        readonly Dictionary<InputEvents, float> _inputAbilityStartTimes = new();
+        readonly Dictionary<ResourceEvents, float> _resourceAbilityStartTimes = new();
 
         IShip _ship;
+
+        public void SubscribeEvents()
+        {
+            OnButton1Pressed.OnEventRaised += PerformShipControllerActions;
+            OnButton1Released.OnEventRaised += StopShipControllerActions;
+            OnButton2Pressed.OnEventRaised += PerformShipControllerActions;
+            OnButton2Released.OnEventRaised += StopShipControllerActions;
+            OnButton3Pressed.OnEventRaised += PerformShipControllerActions;
+            OnButton3Released.OnEventRaised += StopShipControllerActions;
+        }
+
+        public void UnsubscribeEvents()
+        {
+            OnButton1Pressed.OnEventRaised -= PerformShipControllerActions;
+            OnButton1Released.OnEventRaised -= StopShipControllerActions;
+            OnButton2Pressed.OnEventRaised -= PerformShipControllerActions;
+            OnButton2Released.OnEventRaised -= StopShipControllerActions;
+            OnButton3Pressed.OnEventRaised -= PerformShipControllerActions;
+            OnButton3Released.OnEventRaised -= StopShipControllerActions;
+        }
 
         public void Initialize(IShip ship)
         {
@@ -27,14 +55,20 @@ namespace CosmicShore.Core
             ShipHelper.InitializeClassResourceActions(ship, _resourceEventClassActions, _classResourceActions);
         }
 
-        public void Perform(InputEvents ev)
+        public void PerformShipControllerActions(InputEvents controlType)
         {
-            ShipHelper.PerformShipControllerActions(ev, out _, _shipControlActions);
+            ShipHelper.PerformShipControllerActions(controlType, _inputAbilityStartTimes, _shipControlActions);
         }
 
-        public void Stop(InputEvents ev)
+        public void StopShipControllerActions(InputEvents controlType)
         {
-            ShipHelper.StopShipControllerActions(ev, _shipControlActions);
+            if (StatsManager.Instance != null)
+                StatsManager.Instance.AbilityActivated(_ship.ShipStatus.Team, _ship.ShipStatus.Player.PlayerName, controlType,
+                    Time.time - _inputAbilityStartTimes[controlType]);
+
+            ShipHelper.StopShipControllerActions(controlType, _shipControlActions);
         }
+
+        public bool HasAction(InputEvents inputEvent) => _shipControlActions.ContainsKey(inputEvent);
     }
 }

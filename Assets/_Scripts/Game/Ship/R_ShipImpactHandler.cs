@@ -1,4 +1,5 @@
 using CosmicShore.Game;
+using CosmicShore.Game.IO;
 using CosmicShore.Game.Projectiles;
 using CosmicShore.Models;
 using CosmicShore.Models.Enums;
@@ -15,6 +16,7 @@ namespace CosmicShore.Core
     {
         [Header("Impact Settings")]
         [SerializeField] List<CrystalImpactEffects> crystalImpactEffects;
+        [ShowIf(CrystalImpactEffects.AreaOfEffectExplosion)]
         [SerializeField] float minExplosionScale = 50f;
         [SerializeField] float maxExplosionScale = 400f;
         [SerializeField] List<TrailBlockImpactEffects> trailBlockImpactEffects;
